@@ -1,0 +1,23 @@
+# Secrets
+config.py
+
+# Facebook session
+fb_auth_state.json
+
+# Database
+*.db
+
+# Logs
+logs/
+
+# Virtual environment
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/

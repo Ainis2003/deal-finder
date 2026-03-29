@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.deal-finder</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/REPLACE/WITH/VENV/PATH/bin/python</string>
+    <string>/REPLACE/WITH/PROJECT/PATH/orchestrator.py</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/REPLACE/WITH/PROJECT/PATH</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/REPLACE/WITH/PROJECT/PATH/logs/launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>/REPLACE/WITH/PROJECT/PATH/logs/launchd_error.log</string>
+</dict>
+</plist>
