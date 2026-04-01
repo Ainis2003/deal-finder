@@ -1,6 +1,6 @@
 {
   "shipping_to_china_min": 5,
   "shipping_to_china_max": 10,
-  "customs_return_min": 0,
-  "customs_return_max": 5
+  "customs_return_min": 5,
+  "customs_return_max": 10
 }

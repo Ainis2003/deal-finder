@@ -7,18 +7,20 @@
   <string>com.deal-finder</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/REPLACE/WITH/VENV/PATH/bin/python</string>
-    <string>/REPLACE/WITH/PROJECT/PATH/orchestrator.py</string>
+    <string>/Users/macmini/deal-finder/.venv/bin/python</string>
+    <string>/Users/macmini/deal-finder/orchestrator.py</string>
   </array>
   <key>WorkingDirectory</key>
-  <string>/REPLACE/WITH/PROJECT/PATH</string>
+  <string>/Users/macmini/deal-finder</string>
   <key>RunAtLoad</key>
   <true/>
   <key>KeepAlive</key>
   <true/>
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
   <key>StandardOutPath</key>
-  <string>/REPLACE/WITH/PROJECT/PATH/logs/launchd.log</string>
+  <string>/Users/macmini/deal-finder/logs/launchd.log</string>
   <key>StandardErrorPath</key>
-  <string>/REPLACE/WITH/PROJECT/PATH/logs/launchd_error.log</string>
+  <string>/Users/macmini/deal-finder/logs/launchd_error.log</string>
 </dict>
 </plist>

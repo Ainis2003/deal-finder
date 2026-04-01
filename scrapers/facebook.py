@@ -18,18 +18,13 @@ import config
 
 logger = logging.getLogger("deal-finder.scrapers.facebook")
 
-# City marketplace URL slugs — may need numeric IDs if slugs don't work.
-# To find IDs: visit marketplace in browser, check URL for numeric city ID.
-CITY_URLS = {
-    "kaunas": "kaunas",
-    "vilnius": "vilnius",
-    "klaipeda": "klaipeda",
-}
-
-DISTANCE_FROM_KAUNAS = {
-    "kaunas": 0,
-    "vilnius": 100,
-    "klaipeda": 220,
+# City search config: slug + radius in km
+# Note: Facebook Marketplace in Lithuania only recognizes "vilnius" as a valid slug.
+# Other cities (kaunas, klaipeda, etc.) redirect to a generic page with 0 results.
+# We use "vilnius" with a large radius to cover all of Lithuania.
+CITY_CONFIG = {
+    "kaunas":  {"slug": "vilnius", "radius": 120},
+    "vilnius": {"slug": "vilnius", "radius": 60},
 }
 
 _browser: Browser | None = None
@@ -67,109 +62,210 @@ def _close_browser():
         _browser = None
 
 
+def _parse_card(link, city: str) -> dict | None:
+    """Parse a single listing card element into a normalized dict."""
+    try:
+        href = link.get_attribute("href") or ""
+        match = re.search(r"/marketplace/item/(\d+)", href)
+        if not match:
+            return None
+
+        item_id = match.group(1)
+        url = f"https://www.facebook.com/marketplace/item/{item_id}/"
+
+        # Card text layout: "price\ntitle\nlocation"
+        card_text = link.inner_text()
+        lines = [l.strip() for l in card_text.split("\n") if l.strip()]
+
+        price = None
+        title = ""
+        location = None
+
+        for line in lines:
+            # Skip all price lines — some cards have two (original + discounted)
+            price_match = re.search(r"[€$]\s*([\d,.\s]+)", line)
+            if not price_match:
+                price_match = re.search(r"([\d,.\s]+)\s*[€$]", line)
+            if price_match:
+                # Keep the first (lowest/current) price
+                if price is None:
+                    price_str = price_match.group(1).replace(",", "").replace(" ", "").replace(".", "")
+                    try:
+                        price = int(price_str)
+                    except ValueError:
+                        pass
+                continue
+
+            # After price lines, next meaningful line is title, then location
+            if not title and len(line) > 3 and len(line) < 200:
+                title = line
+                continue
+
+            # Location line — typically "City, XX" format
+            if title and location is None and len(line) < 60:
+                location = line
+                continue
+
+        # Image
+        img = link.query_selector("img")
+        image_url = img.get_attribute("src") if img else None
+
+        return {
+            "id": f"facebook_{item_id}",
+            "platform": "facebook",
+            "title": title,
+            "description": "",  # Fetched on demand for promising listings
+            "price": price,
+            "condition": None,
+            "seller_reviews": None,
+            "seller_joined": None,
+            "seller_location": location or city.capitalize(),
+            "distance_km": None,
+            "url": url,
+            "image_url": image_url,
+            "listed_at": datetime.now(timezone.utc).isoformat(),
+            "platform_raw": {"card_text": card_text},
+        }
+    except Exception as e:
+        logger.debug(f"Failed to parse listing card: {e}")
+        return None
+
+
 def _extract_listings(page, city: str) -> list[dict]:
     """Extract listing data from the current marketplace page."""
-    listings = []
-
-    # Find all listing links
     links = page.query_selector_all('a[href*="/marketplace/item/"]')
     logger.debug(f"Found {len(links)} listing links for {city}")
 
+    listings = []
     seen_ids = set()
     for link in links:
-        try:
-            href = link.get_attribute("href") or ""
-
-            # Extract item ID from URL
-            match = re.search(r"/marketplace/item/(\d+)", href)
-            if not match:
-                continue
-            item_id = match.group(1)
-            if item_id in seen_ids:
-                continue
-            seen_ids.add(item_id)
-
-            # Build full URL
-            url = f"https://www.facebook.com/marketplace/item/{item_id}/"
-
-            # Extract text content from the listing card
-            card_text = link.inner_text()
-            lines = [l.strip() for l in card_text.split("\n") if l.strip()]
-
-            # Extract price — look for € amount
-            price = None
-            for line in lines:
-                price_match = re.search(r"[€]\s*([\d,.\s]+)", line)
-                if price_match:
-                    price_str = price_match.group(1).replace(",", "").replace(" ", "").replace(".", "")
-                    try:
-                        price = int(price_str)
-                    except ValueError:
-                        pass
-                    break
-                # Also try plain number with € symbol
-                price_match = re.search(r"([\d,.\s]+)\s*[€]", line)
-                if price_match:
-                    price_str = price_match.group(1).replace(",", "").replace(" ", "").replace(".", "")
-                    try:
-                        price = int(price_str)
-                    except ValueError:
-                        pass
-                    break
-
-            # Title — typically the first non-price line
-            title = ""
-            for line in lines:
-                if "€" not in line and len(line) > 3 and len(line) < 200:
-                    title = line
-                    break
-
-            # Location — look for a shorter line that might be a city name
-            location = None
-            for line in lines:
-                if "€" not in line and line != title and len(line) < 60:
-                    location = line
-                    break
-
-            # Image
-            img = link.query_selector("img")
-            image_url = img.get_attribute("src") if img else None
-
-            # Distance from Kaunas
-            distance_km = DISTANCE_FROM_KAUNAS.get(city)
-
-            listing = {
-                "id": f"facebook_{item_id}",
-                "platform": "facebook",
-                "title": title,
-                "description": "",  # Description requires visiting individual page
-                "price": price,
-                "condition": None,
-                "seller_reviews": None,
-                "seller_joined": None,
-                "seller_location": city.capitalize(),
-                "distance_km": distance_km,
-                "url": url,
-                "image_url": image_url,
-                "listed_at": datetime.now(timezone.utc).isoformat(),
-                "platform_raw": {"card_text": card_text},
-            }
-            listings.append(listing)
-
-        except Exception as e:
-            logger.debug(f"Failed to extract listing from card: {e}")
+        parsed = _parse_card(link, city)
+        if parsed is None:
             continue
+        if parsed["id"] in seen_ids:
+            continue
+        seen_ids.add(parsed["id"])
+        listings.append(parsed)
 
     return listings
+
+
+def fetch_listing_details(listing: dict) -> dict:
+    """Fetch description and seller info from individual listing page.
+
+    Called on demand for promising listings (after AI filter).
+    Mutates and returns the listing dict with added details.
+
+    FB listing page structure (line-by-line from inner_text):
+      Title
+      Price
+      "Listed X ago in City, XX"
+      ...
+      "Details" or "Condition"
+      condition value (e.g. "Used - Fair")
+      description text (may end with "... See more")
+      "City, XX"
+      ...
+      "Seller details"
+      Seller name
+      "Joined Facebook in YYYY"
+    """
+    _ensure_browser()
+
+    page = _context.new_page()
+    try:
+        page.goto(listing["url"], wait_until="domcontentloaded", timeout=30000)
+        time.sleep(4)
+
+        # Check for auth failure
+        if "/login" in page.url or "checkpoint" in page.url:
+            logger.warning("Facebook auth expired during detail fetch")
+            return listing
+
+        page_text = page.inner_text("body")
+        lines = page_text.split("\n")
+
+        # Extract description: text between "Condition" value and location/sponsored lines
+        description = ""
+        condition = None
+        in_details = False
+        skip_labels = {
+            "details", "condition", "seller details", "seller information",
+            "message seller", "message", "sponsored", "location is approximate",
+            "today's picks", "see all listings",
+        }
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            low = stripped.lower()
+
+            if low in ("details", "condition"):
+                in_details = True
+                continue
+
+            if in_details:
+                # Condition value (e.g. "Used - Fair", "Used - Good")
+                if condition is None and ("used" in low or "new" in low or "naudot" in low or "nauj" in low):
+                    condition = stripped
+                    listing["condition"] = condition
+                    continue
+
+                # Description — the next substantial text line
+                if not description and len(stripped) > 15 and low not in skip_labels:
+                    # Strip "... See more" / "... Rodyti daugiau" suffix
+                    description = re.sub(r"\.\.\.\s*(?:See more|Rodyti daugiau)\s*$", "...", stripped)
+                    listing["description"] = description
+                    continue
+
+                # Stop at location line or seller section
+                if stripped and (
+                    low in skip_labels
+                    or re.match(r"^[A-ZĀ-Ž][\w\s-]+,\s*[A-Z]{2}$", stripped)  # "City, XX"
+                    or low.startswith("seller")
+                ):
+                    break
+
+        # Seller joined date — "Joined Facebook in YYYY" or "Prisijungė YYYY m."
+        joined_match = re.search(
+            r"Joined Facebook in (\d{4})|Prisijung.\s+(\d{4})\s*m\.",
+            page_text,
+        )
+        if joined_match:
+            listing["seller_joined"] = joined_match.group(1) or joined_match.group(2)
+
+        # Listed time and location — "Listed X ago in City, XX"
+        listed_match = re.search(
+            r"Listed .+? in (.+?)$",
+            page_text,
+            re.MULTILINE,
+        )
+        if listed_match:
+            listing["seller_location"] = listed_match.group(1).strip()
+
+        logger.debug(
+            f"Fetched details for {listing['id']}: "
+            f"desc={len(description)} chars, "
+            f"condition={condition}, "
+            f"joined={listing.get('seller_joined')}"
+        )
+
+    except Exception as e:
+        logger.warning(f"Failed to fetch details for {listing['id']}: {e}")
+    finally:
+        page.close()
+
+    return listing
 
 
 def poll_city(city: str) -> list[dict]:
     """Poll Facebook Marketplace for a single city. Called from thread."""
     _ensure_browser()
 
-    city_slug = CITY_URLS.get(city, city)
+    city_cfg = CITY_CONFIG.get(city, {"slug": city, "radius": 50})
     query = quote_plus("macbook")
-    url = f"https://www.facebook.com/marketplace/{city_slug}/search/?query={query}"
+    url = (
+        f"https://www.facebook.com/marketplace/{city_cfg['slug']}/search/"
+        f"?query={query}&radius={city_cfg['radius']}&exact=false"
+    )
 
     page = _context.new_page()
     try:

@@ -1,7 +1,227 @@
 {
-  "MacBook Air M1 8GB 256GB": {
+  "_formula": "price = base_price + ram_premium[ram] + storage_premium[storage]. Premium is 0 for base RAM/storage.",
+  "MacBook Air M1 13-inch 2020": {
     "model_id": "A2337",
-    "working_sell_estimate": 0,
-    "broken_sell_estimate": 0
+    "processor": "M1",
+    "base": "8GB/256GB",
+    "base_price": 300,
+    "ram": { "16GB": 60 },
+    "storage": { "512GB": 20, "1TB": 50, "2TB": 80 }
+  },
+  "MacBook Pro M1 13-inch 2020": {
+    "model_id": "A2338",
+    "processor": "M1",
+    "base": "8GB/256GB",
+    "base_price": 320,
+    "ram": { "16GB": 40 },
+    "storage": { "512GB": 20, "1TB": 60, "2TB": 80 }
+  },
+  "MacBook Pro M2 13-inch 2022": {
+    "model_id": "A2338",
+    "processor": "M2",
+    "base": "8GB/256GB",
+    "base_price": 520,
+    "ram": { "16GB": 80, "24GB": 100 },
+    "storage": { "512GB": 40, "1TB": 60, "2TB": 100 }
+  },
+  "MacBook Pro M1 Pro 14-inch 2021": {
+    "model_id": "A2442",
+    "processor": "M1 Pro",
+    "base": "16GB/512GB",
+    "base_price": 620,
+    "ram": { "32GB": 80 },
+    "storage": { "1TB": 30, "2TB": 140, "4TB": 300, "8TB": 450 }
+  },
+  "MacBook Pro M1 Max 14-inch 2021": {
+    "model_id": "A2442",
+    "processor": "M1 Max",
+    "base": "32GB/512GB",
+    "base_price": 900,
+    "ram": { "64GB": 150 },
+    "storage": { "1TB": 50, "2TB": 120, "4TB": 200, "8TB": 300 }
+  },
+  "MacBook Pro M1 Pro 16-inch 2021": {
+    "model_id": "A2485",
+    "processor": "M1 Pro",
+    "base": "16GB/512GB",
+    "base_price": 670,
+    "ram": { "32GB": 70 },
+    "storage": { "1TB": 40, "2TB": 120, "4TB": 200, "8TB": 300 }
+  },
+  "MacBook Pro M1 Max 16-inch 2021": {
+    "model_id": "A2485",
+    "processor": "M1 Max",
+    "base": "32GB/512GB",
+    "base_price": 950,
+    "ram": { "64GB": 150 },
+    "storage": { "1TB": 50, "2TB": 100, "4TB": 150, "8TB": 200 }
+  },
+  "MacBook Air M2 13-inch 2022": {
+    "model_id": "A2681",
+    "processor": "M2",
+    "base": "8GB/256GB",
+    "base_price": 480,
+    "ram": { "16GB": 70, "24GB": 160 },
+    "storage": { "512GB": 20, "1TB": 50, "2TB": 100 }
+  },
+  "MacBook Air M2 15-inch 2023": {
+    "model_id": "A2941",
+    "processor": "M2",
+    "base": "8GB/256GB",
+    "base_price": 540,
+    "ram": { "16GB": 80, "24GB": 160 },
+    "storage": { "512GB": 30, "1TB": 40, "2TB": 80 }
+  },
+  "MacBook Pro M2 Pro 14-inch 2023": {
+    "model_id": "A2779",
+    "processor": "M2 Pro",
+    "base": "16GB/512GB",
+    "base_price": 750,
+    "ram": { "32GB": 150 },
+    "storage": { "1TB": 70, "2TB": 200, "4TB": 400, "8TB": 550 }
+  },
+  "MacBook Pro M2 Max 14-inch 2023": {
+    "model_id": "A2779",
+    "processor": "M2 Max",
+    "base": "32GB/512GB",
+    "base_price": 1200,
+    "ram": { "64GB": 200, "96GB": 300 },
+    "storage": { "1TB": 100, "2TB": 200, "4TB": 400, "8TB": 550 }
+  },
+  "MacBook Pro M2 Pro 16-inch 2023": {
+    "model_id": "A2780",
+    "processor": "M2 Pro",
+    "base": "16GB/512GB",
+    "base_price": 1000,
+    "ram": { "32GB": 120 },
+    "storage": { "1TB": 100, "2TB": 200, "4TB": 350, "8TB": 500 }
+  },
+  "MacBook Pro M2 Max 16-inch 2023": {
+    "model_id": "A2780",
+    "processor": "M2 Max",
+    "base": "32GB/512GB",
+    "base_price": 1250,
+    "ram": { "64GB": 200, "96GB": 450 },
+    "storage": { "1TB": 80, "2TB": 160, "4TB": 350, "8TB": 600 }
+  },
+  "MacBook Air M3 13-inch 2024": {
+    "model_id": "A3113",
+    "processor": "M3",
+    "base": "8GB/256GB",
+    "base_price": 550,
+    "ram": { "16GB": 80, "24GB": 160 },
+    "storage": { "512GB": 50, "1TB": 130, "2TB": 230 }
+  },
+  "MacBook Air M3 15-inch 2024": {
+    "model_id": "A3114",
+    "processor": "M3",
+    "base": "8GB/256GB",
+    "base_price": 620,
+    "ram": { "16GB": 80, "24GB": 170 },
+    "storage": { "512GB": 60, "1TB": 150, "2TB": 260 }
+  },
+  "MacBook Pro M3 14-inch 2023": {
+    "model_id": "A2918",
+    "processor": "M3",
+    "base": "8GB/512GB",
+    "base_price": 770,
+    "ram": { "16GB": 120, "24GB": 200 },
+    "storage": { "1TB": 80, "2TB": 200 }
+  },
+  "MacBook Pro M3 Pro 14-inch 2023": {
+    "model_id": "A2992",
+    "processor": "M3 Pro",
+    "base": "18GB/512GB",
+    "base_price": 1050,
+    "ram": { "36GB": 150 },
+    "storage": { "1TB": 120, "2TB": 280, "4TB": 420 }
+  },
+  "MacBook Pro M3 Max 14-inch 2023": {
+    "model_id": "A2992",
+    "processor": "M3 Max",
+    "base": "36GB/1TB",
+    "base_price": 1700,
+    "ram": { "48GB": 200, "64GB": 380, "96GB": 600, "128GB": 950 },
+    "storage": { "2TB": 200, "4TB": 500, "8TB": 800 }
+  },
+  "MacBook Pro M3 Pro 16-inch 2023": {
+    "model_id": "A2991",
+    "processor": "M3 Pro",
+    "base": "18GB/512GB",
+    "base_price": 1200,
+    "ram": { "36GB": 200 },
+    "storage": { "1TB": 150, "2TB": 320, "4TB": 470 }
+  },
+  "MacBook Pro M3 Max 16-inch 2023": {
+    "model_id": "A2991",
+    "processor": "M3 Max",
+    "base": "36GB/1TB",
+    "base_price": 2050,
+    "ram": { "48GB": 220, "64GB": 420, "96GB": 650, "128GB": 1000 },
+    "storage": { "2TB": 250, "4TB": 550, "8TB": 850 }
+  },
+  "MacBook Pro M4 14-inch 2024": {
+    "model_id": "A3112",
+    "processor": "M4",
+    "base": "16GB/512GB",
+    "base_price": 1150,
+    "ram": { "24GB": 130, "32GB": 220 },
+    "storage": { "1TB": 170, "2TB": 340 }
+  },
+  "MacBook Pro M4 Pro 14-inch 2024": {
+    "model_id": "A3401",
+    "processor": "M4 Pro",
+    "base": "24GB/512GB",
+    "base_price": 1550,
+    "ram": { "48GB": 250 },
+    "storage": { "1TB": 200, "2TB": 400, "4TB": 600 }
+  },
+  "MacBook Pro M4 Max 14-inch 2024": {
+    "model_id": "A3185",
+    "processor": "M4 Max",
+    "base": "36GB/1TB",
+    "base_price": 2600,
+    "ram": { "48GB": 350, "64GB": 700, "128GB": 1400 },
+    "storage": { "2TB": 350, "4TB": 700, "8TB": 1200 }
+  },
+  "MacBook Pro M4 Pro 16-inch 2024": {
+    "model_id": "A3403",
+    "processor": "M4 Pro",
+    "base": "24GB/512GB",
+    "base_price": 1800,
+    "ram": { "48GB": 350 },
+    "storage": { "1TB": 200, "2TB": 420, "4TB": 620 }
+  },
+  "MacBook Pro M4 Max 16-inch 2024": {
+    "model_id": "A3186",
+    "processor": "M4 Max",
+    "base": "36GB/1TB",
+    "base_price": 2750,
+    "ram": { "48GB": 400, "64GB": 800, "128GB": 1500 },
+    "storage": { "2TB": 350, "4TB": 700, "8TB": 1200 }
+  },
+  "MacBook Air M4 13-inch 2025": {
+    "model_id": "A3240",
+    "processor": "M4",
+    "base": "16GB/256GB",
+    "base_price": 700,
+    "ram": { "24GB": 130, "32GB": 300 },
+    "storage": { "512GB": 80, "1TB": 250, "2TB": 450 }
+  },
+  "MacBook Air M4 15-inch 2025": {
+    "model_id": "A3241",
+    "processor": "M4",
+    "base": "16GB/256GB",
+    "base_price": 850,
+    "ram": { "24GB": 130, "32GB": 300 },
+    "storage": { "512GB": 120, "1TB": 280, "2TB": 500 }
+  },
+  "MacBook Pro M5 14-inch 2025": {
+    "model_id": "A3434",
+    "processor": "M5",
+    "base": "16GB/512GB",
+    "base_price": 1400,
+    "ram": { "24GB": 180, "32GB": 320 },
+    "storage": { "1TB": 180, "2TB": 360, "4TB": 540 }
   }
 }

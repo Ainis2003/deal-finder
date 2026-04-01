@@ -15,8 +15,42 @@ scraper_status: dict[str, datetime | None] = {
     "facebook": None,
     "skelbiu": None,
 }
-listings_seen_today: int = 0
 alerts_paused: bool = False
+scrapers_stopped: bool = False
+
+# Per-platform daily stats (reset at midnight)
+_EMPTY_PLATFORM_STATS = {"checked": 0, "sent": 0, "flagged": 0, "skipped": 0, "errors": 0}
+daily_stats: dict[str, dict[str, int]] = {
+    "vinted": {**_EMPTY_PLATFORM_STATS},
+    "facebook": {**_EMPTY_PLATFORM_STATS},
+    "skelbiu": {**_EMPTY_PLATFORM_STATS},
+}
+_stats_date: str | None = None
+
+
+def record_stat(platform: str, verdict: str):
+    """Record an AI verdict for a platform. Call after each listing is processed."""
+    global _stats_date
+    from datetime import date
+    today = date.today().isoformat()
+    if _stats_date != today:
+        # Reset at midnight
+        for p in daily_stats:
+            daily_stats[p] = {**_EMPTY_PLATFORM_STATS}
+        _stats_date = today
+
+    if platform not in daily_stats:
+        daily_stats[platform] = {**_EMPTY_PLATFORM_STATS}
+
+    daily_stats[platform]["checked"] += 1
+    if verdict == "SEND":
+        daily_stats[platform]["sent"] += 1
+    elif verdict == "SEND_FLAGGED":
+        daily_stats[platform]["flagged"] += 1
+    elif verdict == "SKIP":
+        daily_stats[platform]["skipped"] += 1
+    else:
+        daily_stats[platform]["errors"] += 1
 
 
 # ── Message formatting ──────────────────────────────────────────────
@@ -29,6 +63,8 @@ def format_deal_message(verdict: dict, listing: dict) -> str:
 
     if v["verdict"] == "SEND":
         header = f"🟢 GOOD DEAL · {platform}"
+    elif v["verdict"] == "SEND_NEGOTIATE":
+        header = f"🔵 NEGOTIATE · {platform}"
     else:
         header = f"🟡 FLAGGED DEAL · {platform}"
     if location:
@@ -36,47 +72,71 @@ def format_deal_message(verdict: dict, listing: dict) -> str:
 
     # Model line
     model_line = v.get("model_name") or listing["title"]
-    if v.get("is_broken") and v.get("repair_type"):
-        model_line += f" (broken {v['repair_type']})"
     if v.get("model_id"):
         model_line += f" ({v['model_id']})"
 
-    # Price line
-    if v.get("is_broken"):
-        price_line = f"💶 Price: €{v['listing_price']} → Sell est. after repair: €{v['sell_estimate']}"
-    else:
-        price_line = f"💶 Price: €{v['listing_price']} → Sell est.: €{v['sell_estimate']}"
+    # Specs line
+    specs_parts = []
+    if v.get("year"):
+        specs_parts.append(str(v["year"]))
+    if v.get("processor"):
+        specs_parts.append(v["processor"])
+    if v.get("ram"):
+        specs_parts.append(v["ram"])
+    if v.get("storage"):
+        specs_parts.append(v["storage"])
+    if v.get("screen_size"):
+        specs_parts.append(v["screen_size"])
+    specs_line = " · ".join(specs_parts) if specs_parts else ""
 
-    # Profit line
-    hourly = v.get("effective_hourly_rate")
-    hourly_str = f"€{hourly:.0f}/hr" if hourly is not None else "N/A (no time)"
-    profit_line = (
-        f"💰 Net profit: €{v['net_profit']:.0f} · "
-        f"ROI: {v['roi_percent']:.1f}% · {hourly_str}"
-    )
+    # Condition
+    repairs = v.get("repairs_needed", [])
+    if v.get("is_broken") and repairs:
+        repair_str = ", ".join(r.replace("_", " ") for r in repairs)
+        condition_line = f"🔧 Broken — {repair_str}"
+        if "motherboard_water_damage" in repairs:
+            condition_line += " ⚠️"
+    elif v.get("condition_notes"):
+        condition_line = f"📦 {v['condition_notes']}"
+    else:
+        condition_line = "📦 Working"
+
+    # Price + profit
+    price = listing.get("price", "?")
+    sell_price = v.get("sell_price")
+    net_profit = v.get("net_profit")
+    roi = v.get("roi_percent")
+
+    if sell_price and net_profit is not None:
+        price_line = f"💶 €{price} → Sell: €{sell_price}"
+        hourly = v.get("effective_hourly_rate")
+        hourly_str = f" · €{hourly:.0f}/hr" if hourly is not None else ""
+        profit_line = f"💰 Profit: €{net_profit:.0f} · ROI: {roi:.0f}%{hourly_str}"
+    else:
+        price_line = f"💶 €{price}"
+        profit_line = ""
+
+    # Negotiate info
+    neg = v.get("negotiate")
+    if neg and v["verdict"] == "SEND_NEGOTIATE":
+        negotiate_line = f"🎯 Negotiate to €{neg['target_price']} → profit €{neg['profit_if_negotiated']:.0f}, ROI {neg['roi_if_negotiated']:.0f}%"
+    else:
+        negotiate_line = ""
 
     # Cost breakdown
     cb = v.get("cost_breakdown", {})
-    cost_lines = ["📋 Costs breakdown:"]
+    cost_parts = []
     if cb.get("buyer_protection_fee"):
-        cost_lines.append(f"  Buyer protection fee: €{cb['buyer_protection_fee']:.2f}")
-    if cb.get("fuel_cost"):
-        cost_lines.append(f"  Pickup cost: €{cb['fuel_cost']:.0f}")
-    if cb.get("disassembly_fee"):
-        cost_lines.append(f"  Disassembly: €{cb['disassembly_fee']:.0f}")
-    if cb.get("repair_cost"):
-        cost_lines.append(f"  Repair ({v.get('repair_type', '?')}): €{cb['repair_cost']:.0f}")
-    if cb.get("shipping_to_china"):
-        cost_lines.append(f"  Shipping to China: €{cb['shipping_to_china']:.2f}")
-    if cb.get("customs_return"):
-        cost_lines.append(f"  Customs return: €{cb['customs_return']:.2f}")
+        cost_parts.append(f"Buyer fee: €{cb['buyer_protection_fee']:.2f}")
+    if cb.get("pickup_cost"):
+        cost_parts.append(f"Pickup: €{cb['pickup_cost']:.0f}")
+    if cb.get("repair_total"):
+        cost_parts.append(f"Repair: €{cb['repair_total']:.0f}")
     if cb.get("selling_fee"):
-        cost_lines.append(f"  Selling fee: €{cb['selling_fee']:.0f}")
-    if len(cost_lines) == 1:
-        cost_lines.append("  No extra costs")
-    costs_block = "\n".join(cost_lines)
+        cost_parts.append(f"Selling: €{cb['selling_fee']:.0f}")
+    costs_line = f"📋 {' · '.join(cost_parts)}" if cost_parts else ""
 
-    # Scam + repair risk
+    # Scam risk
     scam_risk = v.get("scam_risk", "low").upper()
     if scam_risk == "LOW":
         risk_line = f"✅ Scam risk: {scam_risk}"
@@ -87,36 +147,43 @@ def format_deal_message(verdict: dict, listing: dict) -> str:
     for flag in v.get("scam_flags", []):
         flag_lines.append(f"• {flag}")
 
-    if v.get("repair_risk") and v["repair_risk"] != "none":
-        risk_label = v["repair_risk"].upper().replace("_", " ")
-        repair_type = v.get("repair_type", "unknown")
-        flag_lines.append(f"⚠️ Repair risk: {risk_label} ({repair_type})")
-
-    if v.get("hourly_rate_flag"):
-        flag_lines.append(f"⏱️ {v['hourly_rate_flag']}")
-
-    flags_block = "\n".join(flag_lines)
-
     # Seller info
     seller_parts = []
     reviews = listing.get("seller_reviews")
     if reviews is not None:
-        seller_parts.append(f"{reviews} reviews")
+        neg = listing.get("seller_negative_reviews")
+        if neg is not None and neg > 0:
+            seller_parts.append(f"{reviews} reviews ({neg} negative)")
+        else:
+            seller_parts.append(f"{reviews} reviews")
     joined = listing.get("seller_joined")
     if joined:
-        seller_parts.append(f"Seller since {joined}")
+        seller_parts.append(f"since {joined}")
     seller_line = f"👤 {' · '.join(seller_parts)}" if seller_parts else ""
 
     # Verdict reason
     reason = v.get("verdict_reason", "")
 
     # Assemble
-    parts = [header, "", model_line, price_line, profit_line, "", costs_block, "", risk_line]
-    if flags_block:
-        parts.append(flags_block)
+    parts = [header, "", model_line]
+    if specs_line:
+        parts.append(specs_line)
+    parts.extend([condition_line, "", price_line])
+    if profit_line:
+        parts.append(profit_line)
+    if negotiate_line:
+        parts.append(negotiate_line)
+    if costs_line:
+        parts.append(costs_line)
+    parts.append("")
+    parts.append(risk_line)
+    if flag_lines:
+        parts.extend(flag_lines)
     if seller_line:
         parts.append(seller_line)
-    parts.extend(["", reason, "", f"🔗 {listing['url']}"])
+    if reason:
+        parts.extend(["", reason])
+    parts.extend(["", f"🔗 {listing['url']}"])
 
     return "\n".join(parts)
 
@@ -176,6 +243,8 @@ async def cmd_ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    import db
+
     lines = ["📊 Scraper Status\n"]
     for name, last in scraper_status.items():
         if last:
@@ -184,8 +253,30 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
             lines.append(f"  {name.capitalize()}: ✅ {minutes:.0f}m ago")
         else:
             lines.append(f"  {name.capitalize()}: ❌ never ran")
-    lines.append(f"\nListings seen today: {listings_seen_today}")
-    lines.append(f"Alerts: {'⏸️ paused' if alerts_paused else '▶️ active'}")
+
+    # Per-platform listing counts (today + total)
+    try:
+        today_counts = await db.get_today_counts()
+        total_counts = await db.get_total_counts()
+    except Exception:
+        today_counts = {}
+        total_counts = {}
+
+    lines.append("\n📋 Listings:")
+    for name in ("vinted", "facebook", "skelbiu"):
+        today = today_counts.get(name, 0)
+        total = total_counts.get(name, 0)
+        lines.append(f"  {name.capitalize()}: {today} today ({total:,} total)")
+
+    # AI verdict stats
+    total_sent = sum(s["sent"] for s in daily_stats.values())
+    total_flagged = sum(s["flagged"] for s in daily_stats.values())
+    total_skipped = sum(s["skipped"] for s in daily_stats.values())
+    total_errors = sum(s["errors"] for s in daily_stats.values())
+    lines.append(f"\n🤖 AI Today: ✅ {total_sent} SEND · ⚠️ {total_flagged} FLAGGED · ❌ {total_skipped} SKIP · 💀 {total_errors} errors")
+
+    lines.append(f"\nAlerts: {'⏸️ paused' if alerts_paused else '▶️ active'}")
+    lines.append(f"Scrapers: {'🛑 stopped' if scrapers_stopped else '🟢 running'}")
     await update.message.reply_text("\n".join(lines))
 
 
@@ -221,6 +312,20 @@ async def cmd_resume(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("▶️ Alerts resumed.")
 
 
+async def cmd_stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global scrapers_stopped
+    scrapers_stopped = True
+    logger.info("Scrapers stopped by user via /stop")
+    await update.message.reply_text("🛑 Scrapers stopped. No polling, no API calls.\nUse /start to resume.")
+
+
+async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global scrapers_stopped
+    scrapers_stopped = False
+    logger.info("Scrapers started by user via /start")
+    await update.message.reply_text("🟢 Scrapers started. Polling and AI analysis resumed.")
+
+
 # ── Bot setup ───────────────────────────────────────────────────────
 
 
@@ -231,4 +336,6 @@ def create_bot_app() -> Application:
     app.add_handler(CommandHandler("errors", cmd_errors))
     app.add_handler(CommandHandler("pause", cmd_pause))
     app.add_handler(CommandHandler("resume", cmd_resume))
+    app.add_handler(CommandHandler("stop", cmd_stop))
+    app.add_handler(CommandHandler("start", cmd_start))
     return app

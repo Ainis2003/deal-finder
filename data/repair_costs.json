@@ -1,9 +1,134 @@
 {
+  "_instructions": "Combined repair + disassembly costs in EUR per model_id and repair type. Disassembly = technician fee to open/close the device. Motherboard/water damage is a single repair category — they don't stack. Repair cost is a range (100-300) depending on severity.",
+
   "A2337": {
-    "lcd": 0,
-    "battery": 0,
-    "keyboard": 0,
-    "motherboard": 0,
-    "water_damage": 0
+    "lcd": { "repair": 130, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A2338": {
+    "lcd": { "repair": 150, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+
+  "A2442": {
+    "lcd": { "repair": 195, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A2485": {
+    "lcd": { "repair": 245, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+
+  "A2681": {
+    "lcd": { "repair": 150, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A2941": {
+    "lcd": { "repair": 145, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A2779": {
+    "lcd": { "repair": 195, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A2780": {
+    "lcd": { "repair": 245, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+
+  "A2918": {
+    "lcd": { "repair": 195, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A2992": {
+    "lcd": { "repair": 195, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A2991": {
+    "lcd": { "repair": 245, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A3113": {
+    "lcd": { "repair": 150, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A3114": {
+    "lcd": { "repair": 145, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+
+  "A3112": {
+    "lcd": { "repair": 195, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A3401": {
+    "lcd": { "repair": 195, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A3185": {
+    "lcd": { "repair": 195, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A3403": {
+    "lcd": { "repair": 245, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A3186": {
+    "lcd": { "repair": 245, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A3240": {
+    "lcd": { "repair": 150, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A3241": {
+    "lcd": { "repair": 145, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
+  },
+  "A3434": {
+    "lcd": { "repair": 195, "disassembly": 10 },
+    "battery": { "repair": 35, "disassembly": 10 },
+    "keyboard": { "repair": 2.75, "disassembly": 10 },
+    "motherboard_water_damage": { "repair_min": 100, "repair_max": 300, "disassembly": 15 }
   }
 }
